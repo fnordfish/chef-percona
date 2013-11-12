@@ -43,6 +43,15 @@ directory "/etc/mysql" do
   mode 0755
 end
 
+directory node["percona"]["server"]["includedir"] do
+  owner "root"
+  group "root"
+  mode 00755
+  action :create
+  recursive true
+end
+
+
 # setup the data directory
 directory datadir do
   owner user
