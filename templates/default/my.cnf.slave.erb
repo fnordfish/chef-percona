@@ -31,6 +31,9 @@ interactive-timeout
 socket           = <%= node["percona"]["server"]["socket"] %>
 nice             = <%= node["percona"]["server"]["nice"] %>
 open-files-limit = <%= node["percona"]["server"]["open_files_limit"] %>
+<% if node["percona"]["server"]["jemalloc"] %>
+malloc-lib       = <%= node["percona"]["server"]["jemalloc_lib"] %>
+<% end %>
 
 # *** Application-specific options follow here ***
 
@@ -54,11 +57,17 @@ slave_load_tmpdir = <%= node["percona"]["server"]["tmpdir"] %>
 character_set_server = <%= node["percona"]["server"]["character_set"] %>
 collation_server  = <%= node["percona"]["server"]["collation"] %>
 
+<% if node["percona"]["server"]["skip_name_resolve"] %>
+skip-name-resolve
+<% end %>
+
 <% if node["percona"]["server"]["skip_external_locking"] %>
 skip-external-locking
 <% end %>
 
 net_read_timeout = <%= node["percona"]["server"]["net_read_timeout"] %>
+connect_timeout  = <%= node["percona"]["server"]["connect_timeout"] %>
+wait_timeout     = <%= node["percona"]["server"]["wait_timeout"] %>
 
 #
 # For compatibility to other Debian packages that still use
@@ -82,6 +91,13 @@ key_buffer = <%= node["percona"]["server"]["key_buffer"] %>
 # large BLOBs).  enlarged dynamically, for each connection.
 max_allowed_packet  = <%= node["percona"]["server"]["max_allowed_packet"] %>
 
+# Maximum String length size of a group concat result
+group_concat_max_len = <%= node["percona"]["server"]["group_concat_max_len"] %>
+
+<% if node["percona"]["server"]["expand_fast_index_creation"] %>
+expand_fast_index_creation
+
+<% end %>
 # Thread stack size to use. This amount of memory is always reserved at
 # connection time. MySQL itself usually needs no more than 64K of
 # memory, while if you use your own stack hungry UDF functions or your
@@ -171,7 +187,11 @@ max_connect_errors = <%= node["percona"]["server"]["max_connect_errors"] %>
 # The number of open tables for all threads.
 # make sure that the open file limit is at least twice this in the
 # mysqld_safe section
-table_cache = <%= node["percona"]["server"]["table_cache"] %>
+<%- if node["percona"]["version"] >= "5.6" %>
+table_open_cache        = <%= node["percona"]["server"]["table_cache"] %>
+<%- else %>
+table_cache             = <%= node["percona"]["server"]["table_cache"] %>
+<%- end %>
 
 #thread_concurrency     = 10
 #
@@ -239,6 +259,9 @@ long_query_time = <%= node["percona"]["server"]["long_query_time"] %>
 # if it is omitted.
 server-id = <%= node["percona"]["server"]["server_id"] %>
 
+# Tells the slave SQL thread not to replicate any statement where the default database is.
+replicate-ignore-db = <%= node["percona"]["server"]["replication"]["ignore_db"] %>
+
 # Make the slave read-only. Only users with the SUPER privilege and the
 # replication slave thread will be able to modify data on it. You can
 # use this to ensure that no applications will accidently modify data on
@@ -250,6 +273,7 @@ read_only
 log_bin          = <%= node["percona"]["server"]["datadir"] %>/mysql-bin.log
 expire_logs_days = <%= node["percona"]["server"]["expire_logs_days"] %>
 max_binlog_size  = <%= node["percona"]["server"]["max_binlog_size"] %>
+binlog_format    = <%= node["percona"]["server"]["binlog_format"] %>
 
 <% node["percona"]["server"]["binlog_do_db"].each do |db_name| %>
 binlog-do-db     = <%= db_name %>
@@ -379,6 +403,12 @@ innodb_data_file_path = <%= node["percona"]["server"]["innodb_data_file_path"] %
 <% if node["percona"]["server"]["innodb_file_per_table"] %>
 innodb_file_per_table
 <% end %>
+
+# The file format to use for new InnoDB tables.
+# Currently Antelope and Barracuda are supported.
+# This applies only for tables that have their own tablespace,
+# so for it to have an effect innodb_file_per_table must be enabled.
+innodb_file_format = <%= node["percona"]["server"]["innodb_file_format"] %>
 
 # Set this option if you would like the InnoDB tablespace files to be
 # stored in another location. By default this is the MySQL datadir.

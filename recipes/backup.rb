@@ -1,3 +1,8 @@
+#
+# Cookbook Name:: percona
+# Recipe:: backup
+#
+
 node.set["percona"]["backup"]["configure"] = true
 
 include_recipe "percona::package_repo"
@@ -12,4 +17,4 @@ when "rhel"
 end
 
 # access grants
-include_recipe "percona::access_grants"
+include_recipe "percona::access_grants" unless node["percona"]["skip_passwords"]
